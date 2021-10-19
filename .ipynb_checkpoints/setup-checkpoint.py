@@ -17,13 +17,13 @@ test_requires = ["nose2", "numpy", "coverage", "coveralls", "parameterized", "bl
 if sys.version_info[:2] < (3, 6):
     raise RuntimeError("Python version >=3.6 required.")
 
-version_py = os.path.join(os.path.dirname(__file__), "SPARC", "version.py")
+version_py = os.path.join(os.path.dirname(__file__), "spARC", "version.py")
 version = open(version_py).read().strip().split("=")[-1].replace('"', "").strip()
 
 readme = open("README.md").read()
 
 setup(
-    name="SPARC",
+    name="spARC",
     version=version,
     description="Implementation of the spARC algorithm for denoising spatial transcriptoms data",
     author="Manik Kuchroo & Abhinav Godavarthi, Yale University",
