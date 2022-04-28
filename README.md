@@ -5,7 +5,9 @@ Spatial transcriptomics data allows for analysis to be performed between spatial
 
 # Overview of Algorithm:
 
-spARC recovers ground truth gene expression values by creating an integrated diffusion operator that takes into account both spatial location and gene expression profiles of every cell.
+![alt text](https://github.com/KrishnaswamyLab/spARC/blob/main/Figures/Algorithm%20Overview.png)
+
+spARC recovers ground truth gene expression values by creating an integrated diffusion operator that takes into account both spatial location and gene expression profiles of every cell. By first computing diffusion operators based on spatial location and gene expression profiles, we can create an integrated operator that we can apply directly to input gene expression values to recover ground truth counts.
 
 
 
