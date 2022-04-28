@@ -15,7 +15,7 @@ To install please use:
 
 `pip install git+https://github.com/KrishnaswamyLab/spARC`
 
-For overview of functionality, please stay tuned for our spARC tutorial.
+For overview of functionality, please take a look at our [spARC tutorial](https://github.com/KrishnaswamyLab/spARC/blob/main/tutorial/SPARC-tutorial.ipynb).
 
 
 
