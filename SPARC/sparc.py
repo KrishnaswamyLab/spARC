@@ -1,26 +1,22 @@
-import numpy as np
 import graphtools
-import tasklogger
-import collections
-from collections import defaultdict
-from scipy.spatial.distance import pdist, cdist, squareform
+from scipy.spatial.distance import pdist, squareform, jensenshannon
+import pandas as pd
+import numpy as np
 import sklearn
+from sklearn.neighbors import NearestNeighbors
+import tasklogger
 import warnings
+warnings.simplefilter('ignore')
 
-from . import vne
-
-
+# Creating class
 
 class spARC(object):
-    """
-    @dev spARC 
-    """
     def __init__(
         self,
         expression_graph = None,
         spatial_graph = None,
-        expression_knn=5,
-        spatial_knn=2,
+        expression_knn=15,
+        spatial_knn=15,
         expression_n_pca=50,
         expression_decay=40,
         spatial_decay=40,
@@ -53,12 +49,14 @@ class spARC(object):
         self.spatial_diff_op = None
         self.expression_diff_op_powered = None
         self.spatial_diff_op_powered = None
-        self.spatial_diff_op_powered_soluable = None
+        
+        self.soluable_spatial_graph = None
+        self.soluable_diff_op = None
+        self.soluable_diff_op_powered = None
         self.spatial_t_soluable = 10
         self.X_sparc = None
         self.X_sparc_soluable = None
-        self.soluable_spatial_graph = None
-        self.soluable_diff_op = None
+        
         
         super().__init__()
 
@@ -77,12 +75,26 @@ class spARC(object):
                                                          decay=self.expression_decay,n_jobs=self.n_jobs,
                                                          random_state = self.random_state, verbose = False)
             self.expression_diff_op = self.expression_graph.diff_op
+        
+        adjacency = np.zeros(self.X_pca.shape[0]**2).reshape(self.X_pca.shape[0],self.X_pca.shape[0])
         with tasklogger.log_task("spatial graph"):
             if self.spatial_graph == None:
-                self.spatial_graph = graphtools.Graph(self.spatial_X, n_pca = None, distance='euclidean',
-                                                      knn = self.spatial_knn, decay=self.spatial_decay,
-                                                      n_jobs=self.n_jobs,random_state = self.random_state,
-                                                      verbose = False)
+                
+                spatial_neighbors = NearestNeighbors(n_neighbors=self.spatial_knn+1,
+                                                     algorithm="ball_tree").fit(self.spatial_X).kneighbors(return_distance=False)
+
+                rna_neighbors = NearestNeighbors(n_neighbors=3*self.spatial_knn+1,
+                                                 algorithm="ball_tree").fit(self.X_pca).kneighbors(return_distance=False)
+                
+                #adjacency = np.zeros(self.X_pca.shape[0]**2).reshape(self.X_pca.shape[0],self.X_pca.shape[0])
+                for r in range(spatial_neighbors.shape[0]):
+                    intersection = np.intersect1d(spatial_neighbors[r,:], rna_neighbors[r,:])
+                    adjacency[r,intersection] = adjacency[r,intersection] + 1   
+                adjacency = adjacency + adjacency.T
+                
+                self.spatial_graph = graphtools.Graph(adjacency, n_pca = None, precomputed='adjacency',
+                                                      decay=self.spatial_decay, verbose = False,
+                                                      n_jobs=self.n_jobs,random_state = self.random_state)
             self.spatial_diff_op = self.spatial_graph.diff_op
         return
             
@@ -96,7 +108,7 @@ class spARC(object):
         
         if self.spatial_diff_op_powered == None:
             with tasklogger.log_task("random walks on spatial graph"):
-                self.spatial_diff_op_powered = np.linalg.matrix_power(self.spatial_diff_op.toarray(),
+                self.spatial_diff_op_powered = np.linalg.matrix_power(self.spatial_diff_op,
                                                                       self.spatial_t)
         with tasklogger.log_task("spARCed expression data"):
             self.X_sparc = self.expression_diff_op_powered @ self.spatial_diff_op_powered @ self.expression_X
@@ -112,19 +124,24 @@ class spARC(object):
 
     def diffuse_soluable_factors(self, soluable_t = 10, soluable_spatial_graph=None):
         self.spatial_t_soluable = soluable_t
+
         if soluable_spatial_graph != None:
             self.soluable_spatial_graph = soluable_spatial_graph
             self.soluable_diff_op = self.soluable_spatial_graph.diff_op
             
         else:
-            self.soluable_spatial_graph = self.spatial_graph
+            self.soluable_spatial_graph = graphtools.Graph(self.spatial_X, n_pca = None,
+                                                           distance=self.knn_dist, knn = 2*self.spatial_knn+1,
+                                                           decay=self.expression_decay,n_jobs=self.n_jobs,
+                                                           random_state = self.random_state, verbose = False)
             self.soluable_diff_op = self.soluable_spatial_graph.diff_op
             
-        with tasklogger.log_task("random walks on spatial graph"):
-            self.spatial_diff_op_powered_soluable = np.linalg.matrix_power(self.soluable_diff_op.toarray(),
-                                                                           self.spatial_t_soluable)
         with tasklogger.log_task("diffusion on soluable factors"):
-            self.X_sparc_soluable = self.spatial_diff_op_powered_soluable @ self.X_sparc
+            data_sparc_ligands = self.X_sparc.copy()
+            self.X_sparc_soluable = self.X_sparc.copy()
+            for t in range(soluable_t):
+                data_sparc_ligands = self.soluable_diff_op @ data_sparc_ligands
+                self.X_sparc_soluable = data_sparc_ligands + self.X_sparc_soluable
         return self.X_sparc_soluable
 
 def compress_data(X, n_pca=50, random_state=None):
