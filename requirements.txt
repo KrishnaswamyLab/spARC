@@ -1,7 +1,7 @@
-numpy
-scipy
-graphtools
+numpy>=1.18.4
+scipy>=1.4.1
+graphtools==1.5.2
 tasklogger
 collections
-phate
-joblib
+phate==1.0.8
+joblib==1.2.0
