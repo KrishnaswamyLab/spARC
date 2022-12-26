@@ -108,6 +108,8 @@ class spARC(object):
         
         if self.spatial_diff_op_powered == None:
             with tasklogger.log_task("random walks on spatial graph"):
+                if not isinstance(self.spatial_diff_op, np.ndarray):
+                    self.spatial_diff_op = self.spatial_diff_op.toarray()
                 self.spatial_diff_op_powered = np.linalg.matrix_power(self.spatial_diff_op,
                                                                       self.spatial_t)
         with tasklogger.log_task("spARCed expression data"):
