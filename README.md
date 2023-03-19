@@ -1,6 +1,6 @@
 # spARC: Spatial Affinity-Graph Recovery of Counts
 
-![alt text](https://github.com/KrishnaswamyLab/spARC/blob/main/Figures/sparc-logo.png)
+<img src="https://github.com/KrishnaswamyLab/spARC/blob/main/Figures/sparc-logo.png" alt="SPARC logo" width="400"/>
 
 Diffusion map-based methods for denoising and integrating spatial transcriptomics data.
 
