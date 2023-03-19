@@ -1,1 +1,5 @@
 .ipynb_checkpoints
+.DS_Store
+SPARC.egg-info/
+SPARC/__pycache__/
+build/
