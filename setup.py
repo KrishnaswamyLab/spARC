@@ -27,7 +27,7 @@ setup(
     version=version,
     description="Implementation of the spARC algorithm for denoising spatial transcriptomics data",
     author="Manik Kuchroo & Abhinav Godavarthi, Yale University",
-    author_email="manik.kuchroo@yale.edu",
+    author_email="abhig@aya.yale.edu",
     packages=find_packages(),
     include_package_data=True,
     license="GNU General Public License Version 3",
