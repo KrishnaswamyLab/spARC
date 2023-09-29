@@ -50,12 +50,12 @@ class spARC(object):
         self.expression_diff_op_powered = None
         self.spatial_diff_op_powered = None
         
-        self.soluable_spatial_graph = None
-        self.soluable_diff_op = None
-        self.soluable_diff_op_powered = None
-        self.spatial_t_soluable = 10
+        self.soluble_spatial_graph = None
+        self.soluble_diff_op = None
+        self.soluble_diff_op_powered = None
+        self.spatial_t_soluble = 10
         self.X_sparc = None
-        self.X_sparc_soluable = None
+        self.X_sparc_soluble = None
         
         
         super().__init__()
@@ -98,7 +98,6 @@ class spARC(object):
             self.spatial_diff_op = self.spatial_graph.diff_op
         return
             
-            
 
     def transform(self):
         if self.expression_diff_op_powered == None:
@@ -124,27 +123,28 @@ class spARC(object):
         return self.X_sparc
     
 
-    def diffuse_soluable_factors(self, soluable_t = 10, soluable_spatial_graph=None):
-        self.spatial_t_soluable = soluable_t
-
-        if soluable_spatial_graph != None:
-            self.soluable_spatial_graph = soluable_spatial_graph
-            self.soluable_diff_op = self.soluable_spatial_graph.diff_op
+    def diffuse_soluble_factors(self, soluble_t = 10, soluble_spatial_graph=None):
+        
+        self.spatial_t_soluble = soluble_t
+        if soluble_spatial_graph != None:
+            self.soluble_spatial_graph = soluble_spatial_graph
+            self.soluble_diff_op = self.soluble_spatial_graph.diff_op
             
         else:
-            self.soluable_spatial_graph = graphtools.Graph(self.spatial_X, n_pca = None,
-                                                           distance=self.knn_dist, knn = 2*self.spatial_knn+1,
-                                                           decay=self.expression_decay,n_jobs=self.n_jobs,
-                                                           random_state = self.random_state, verbose = False)
-            self.soluable_diff_op = self.soluable_spatial_graph.diff_op
+            self.soluble_spatial_graph = graphtools.Graph(self.spatial_X, n_pca = None,
+                                                        distance=self.knn_dist, knn = 2*self.spatial_knn+1,
+                                                        decay=self.expression_decay,n_jobs=self.n_jobs,
+                                                        random_state = self.random_state, verbose = False)
+            self.soluble_diff_op = self.soluble_spatial_graph.diff_op
             
-        with tasklogger.log_task("diffusion on soluable factors"):
+        with tasklogger.log_task("diffusion on soluble factors"):
             data_sparc_ligands = self.X_sparc.copy()
-            self.X_sparc_soluable = self.X_sparc.copy()
-            for t in range(soluable_t):
-                data_sparc_ligands = self.soluable_diff_op @ data_sparc_ligands
-                self.X_sparc_soluable = data_sparc_ligands + self.X_sparc_soluable
-        return self.X_sparc_soluable
+            self.X_sparc_soluble = self.X_sparc.copy()
+            for t in range(soluble_t):
+                data_sparc_ligands = self.soluble_diff_op @ data_sparc_ligands
+                self.X_sparc_soluble = data_sparc_ligands + self.X_sparc_soluble
+        return self.X_sparc_soluble
+    
 
 def compress_data(X, n_pca=50, random_state=None):
     pca_op = sklearn.decomposition.PCA(n_components=n_pca, random_state=random_state)
